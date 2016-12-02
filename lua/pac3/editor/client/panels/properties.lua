@@ -510,7 +510,8 @@ do -- non editable string
 		local lbl = vgui.Create("DLabel")
 			lbl:SetTextColor(derma.Color("text_dark", self, color_black))
 			lbl:SetFont(pace.CurrentFont)
-			lbl:SetText("  " .. str) -- ugh
+			lbl:SetText(str)
+			lbl:SetTextInset(4,0)
 			lbl:SizeToContents()
 			lbl.pac_tooltip_hack = true
 		self:SetContent(lbl)
@@ -1390,6 +1391,35 @@ do -- model
 	pace.RegisterPanel(PANEL)
 end
 
+
+do -- submaterial
+	local PANEL = {}
+
+	PANEL.ClassName = "properties_submaterialid"
+	PANEL.Base = "pace_properties_base_type"
+	
+	function PANEL:SpecialCallback()
+		
+		local submaterials = pace.current_part:GetSubMaterialIdList()
+		
+		local menu = DermaMenu()
+		
+		menu:MakePopup()
+		
+		for num, path in next,submaterials do
+			menu:AddOption(L(path), function()
+				self:SetValue(num)
+				self.OnValueChanged(num)
+			end)
+		end
+		
+		FIX_MENU(menu)
+	end
+	
+	pace.RegisterPanel(PANEL)
+end
+
+
 do -- material
 	local PANEL = {}
 
@@ -1433,7 +1463,7 @@ local function create_search_list(property, key, name, add_columns, get_list, ge
 	list.OnRowSelected = function(_, id, line) 
 		local val = select_value(line.list_val, line.list_key)
 		
-		if property then
+		if property and property:IsValid() then
 			property:SetValue(val)
 			property.OnValueChanged(val)
 		else
@@ -2006,7 +2036,47 @@ do -- damage type
 	pace.RegisterPanel(PANEL)
 end
 
-do -- damage type
+do -- gesture slots
+	local PANEL = {}
+
+	PANEL.ClassName = "properties_gestureslot"
+	PANEL.Base = "pace_properties_base_type"
+	
+	function PANEL:SpecialCallback()
+		local frame = create_search_list(
+			self,
+			self.CurrentKey,
+			L"gesture slots list", 
+			function(list) 	
+				list:AddColumn("name") 
+			end,
+			function() 
+				return {
+					attackreload = GESTURE_SLOT_ATTACK_AND_RELOAD,
+					grenade = GESTURE_SLOT_GRENADE,
+					jump = GESTURE_SLOT_JUMP,
+					swim = GESTURE_SLOT_SWIM,
+					flinch = GESTURE_SLOT_FLINCH,
+					vcd = GESTURE_SLOT_VCD,
+					custom = GESTURE_SLOT_CUSTOM
+				}
+			end,
+			function()
+				return pace.current_part.SlotName
+			end,
+			function(list, key, val)
+				return list:AddLine(key)
+			end,
+			function(val, key)
+				return key
+			end
+		)
+	end
+	
+	pace.RegisterPanel(PANEL)
+end
+
+do
 	local PANEL = {}
 
 	PANEL.ClassName = "properties_buttons"
